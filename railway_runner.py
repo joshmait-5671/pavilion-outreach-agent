@@ -22,15 +22,16 @@ log = logging.getLogger(__name__)
 
 # ── Write Gmail token from env var ────────────────────────────────────────────
 def write_token_from_env():
-    token_json = os.environ.get("GMAIL_TOKEN_JSON")
-    if token_json:
+    import base64
+    token_b64 = os.environ.get("GMAIL_TOKEN_B64")
+    if token_b64:
         token_path = os.environ.get("GMAIL_TOKEN_PATH", "auth/gmail_token.json")
         os.makedirs(os.path.dirname(token_path), exist_ok=True)
-        with open(token_path, "w") as f:
-            f.write(token_json)
-        log.info(f"Wrote Gmail token to {token_path}")
+        with open(token_path, "wb") as f:
+            f.write(base64.b64decode(token_b64))
+        log.info(f"Wrote Gmail token (pickle) to {token_path}")
     else:
-        log.warning("GMAIL_TOKEN_JSON not set — using existing file if present")
+        log.warning("GMAIL_TOKEN_B64 not set — using existing file if present")
 
 # ── Run pipeline ──────────────────────────────────────────────────────────────
 def run_daily_pipeline():
