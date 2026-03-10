@@ -1,0 +1,308 @@
+campaign:
+  id: sam_jacobs_podcasts
+  name: "Sam Jacobs Podcast Booking"
+  version: "1.0"
+  owner_email: "josh.mait@joinpavilion.com"
+  created: "2026-03-05"
+
+discovery:
+  search_queries:
+    # B2B Sales
+    - "best B2B sales podcast 2025 guest booking"
+    - "top sales leadership podcast interviews"
+    - "revenue leadership podcast top shows"
+    - "CRO chief revenue officer podcast"
+    - "sales enablement podcast guest pitch"
+    # GTM / Revenue Operations
+    - "go-to-market podcast GTM strategy"
+    - "revenue operations podcast RevOps"
+    - "demand generation podcast B2B"
+    - "pipeline generation podcast"
+    - "SaaS sales podcast 2025"
+    # Startup / Founder
+    - "startup founder CEO podcast interviews"
+    - "B2B founder entrepreneurship podcast"
+    - "SaaS founder story podcast"
+    - "startup scaling podcast guest"
+    - "venture backed startup podcast"
+    # Community / Membership
+    - "community building podcast business"
+    - "professional community podcast leadership"
+    - "membership business podcast"
+    # Leadership / Culture
+    - "CEO leadership podcast business"
+    - "executive leadership podcast guest"
+    - "company culture podcast"
+    - "values-driven leadership podcast"
+    # Marketing / Growth
+    - "B2B marketing podcast"
+    - "growth strategy podcast SaaS"
+    # Wider business
+    - "business podcast WSJ bestselling author guest"
+    - "kindness business success podcast"
+    # Big mainstream business shows
+    - "All In Podcast guest pitch"
+    - "How I Built This NPR podcast guest"
+    - "Masters of Scale podcast guest booking"
+    - "Acquired podcast guest"
+    - "My First Million podcast guest pitch"
+    - "Lex Fridman Podcast business guest"
+    - "Tim Ferriss Show podcast guest pitch"
+    - "Diary of a CEO Steven Bartlett guest"
+    - "Smart Less podcast guest"
+    - "Invest Like the Best Patrick OShaughnessy guest"
+    - "Founders podcast David Senra"
+    - "Hubspot My First Million podcast"
+    - "20VC podcast guest Harry Stebbings"
+    - "The Knowledge Project Shane Parrish podcast"
+    - "Hidden Brain Shankar Vedantam podcast guest"
+    # Wellness / Mindset Mega Shows
+    - "Mel Robbins Podcast guest booking"
+    - "Jay Shetty On Purpose podcast guest"
+    - "Lewis Howes School of Greatness podcast guest"
+    - "Brendon Burchard podcast guest"
+    - "Marie Forleo B-School podcast guest"
+    - "Impact Theory Tom Bilyeu podcast guest"
+    - "Huberman Lab podcast business guest"
+    - "Rich Roll podcast business wellness guest"
+    - "Found My Fitness podcast CEO guest"
+    - "Feel Better Live More podcast guest"
+    - "Dare to Lead Brene Brown podcast guest"
+    - "We Can Do Hard Things Glennon Doyle podcast guest"
+    - "Good Life Project Jonathan Fields podcast guest"
+    - "Ten Percent Happier Dan Harris meditation podcast"
+    - "Armchair Expert Dax Shepard business guest"
+    # Tech / AI
+    - "AI in business podcast guest 2025"
+    - "artificial intelligence enterprise podcast"
+    - "future of work AI podcast"
+    - "tech leadership podcast CEO guest"
+    - "AI strategy podcast business leaders"
+    - "No Priors AI podcast guest"
+    - "Lenny's Podcast product growth guest"
+    - "a16z podcast andreessen horowitz guest"
+    - "BG2 podcast Bill Gurley Brad Gerstner guest"
+    # Wellness / Mental Health / Burnout
+    - "corporate wellness podcast executive health"
+    - "workplace mental health podcast"
+    - "executive wellness leadership podcast"
+    - "burnout resilience CEO podcast"
+    - "mental health business leaders podcast"
+    - "work life balance executive podcast"
+    - "performance mindset business podcast"
+    - "longevity health podcast CEO guest"
+    - "burnout prevention entrepreneurship podcast"
+    - "founder mental health therapy podcast"
+    - "high performance health podcast executives"
+    - "stress resilience business podcast guest"
+    - "mindfulness leadership podcast top shows"
+    - "emotional intelligence business podcast"
+    - "therapy entrepreneurship life balance podcast"
+    # General personal development / big audience
+    - "entrepreneurship mindset podcast top shows"
+    - "business storytelling podcast guest"
+    - "author interview podcast business book"
+    - "WSJ bestselling author podcast tour"
+    - "vulnerability leadership podcast"
+    - "authentic leadership podcast guest"
+    - "personal growth business leaders podcast"
+    - "life lessons CEO founder podcast"
+    - "happiness success podcast business guest"
+    - "purpose driven leadership podcast"
+    - "kindness reciprocity business podcast"
+    # Broader business / entrepreneurship
+    - "entrepreneur story podcast top 100"
+    - "how I built this style business podcast"
+    - "bootstrapped founder podcast interview"
+    - "business book author podcast tour 2025"
+    - "inspiring CEO interview podcast"
+    - "leadership lessons podcast top shows"
+    - "future of work podcast business leaders"
+    - "company building podcast founder guest"
+    - "scaling business podcast interview"
+    - "business philosophy podcast CEO guest"
+    # Tech / Innovation / AI (expanded)
+    - "tech CEO podcast innovation future"
+    - "enterprise software podcast founder"
+    - "SaaS business model podcast"
+    - "product led growth podcast"
+    - "AI future business podcast 2025"
+    - "technology leadership podcast interview"
+  max_results_per_query: 15
+  scrape_depth: 1
+  dedup_field: url
+
+qualification:
+  model: "claude-opus-4-6"
+  min_score: 65
+  scoring_criteria:
+    audience_relevance: 35
+    topic_fit: 30
+    audience_size: 20       # estimated listenership / download signal
+    episode_cadence: 15     # must be active (publishing within last 6 months)
+  filters:
+    # Hard disqualifiers — any of these auto-reject regardless of score
+    exclude_if:
+      - dead_show           # no episodes in 6+ months
+      - under_1k_downloads  # estimated under 1,000 downloads/episode
+      - consumer_only       # audience is purely B2C with no business/professional angle
+    # Soft preference — we prefer shows in these tiers, but won't auto-exclude
+    preferred_tiers:
+      - tier_1: "10,000+ downloads/episode — flagship shows (Hubspot, Salesforce pods, etc.)"
+      - tier_2: "1,000–10,000 downloads/episode — strong niche shows, highly relevant audiences"
+      - tier_3: "under 1,000 — only consider if audience fit is exceptionally strong (score 80+)"
+  guest_profile: |
+    Sam Jacobs is a founder, author, and community builder who has become one of
+    the most candid voices on the intersection of ambition, mental health, and human
+    connection in business.
+
+    He is the Founder & CEO of Pavilion — a global professional community of 10,000+
+    go-to-market leaders valued at ~$200M. He is also the author of "Kind Folks Finish
+    First" (WSJ Bestseller), which makes the case that kindness, generosity, and
+    reciprocity are not soft — they are the ultimate competitive advantage.
+
+    Sam speaks openly about burnout, depression, the psychological cost of high-pressure
+    careers, and how he rebuilt himself while building Pavilion. His story resonates
+    deeply with wellness, personal development, and mental health audiences — not just
+    B2B ones.
+
+    His background: 15+ years as a senior revenue leader (CRO/VP Sales) at
+    high-growth B2B SaaS companies. He hosts the Topline Podcast (100K+ downloads/month)
+    and has 103K+ LinkedIn followers.
+
+    IDEAL PODCAST AUDIENCE: The scope is intentionally wide. Sam can speak to
+    any of the following audience types — score generously if the show has a
+    large, engaged audience even if it is not strictly B2B:
+    - B2B professionals (sales, marketing, CS, RevOps, finance, ops)
+    - Startup founders and operators at any stage
+    - General business / entrepreneurship audiences (think How I Built This, All In)
+    - Tech and AI audiences interested in business and the future of work
+    - Corporate wellness / executive health audiences — Sam speaks openly about
+      mental health, burnout, resilience, and the psychological cost of high-pressure careers
+    - General personal development audiences where the host talks to founders and CEOs
+    - Large mainstream shows with broad curious audiences (Lex Fridman, Tim Ferriss, etc.)
+      — Sam's book and founder story play well here even outside a pure B2B context
+
+    SCORING GUIDANCE BY CATEGORY:
+    - Pure B2B / GTM / sales shows: score normally on all criteria
+    - Big mainstream business shows (All In, Masters of Scale, HBR IdeaCast): boost
+      audience_size score significantly — these shows matter even if topic fit is 70%
+    - Tech / AI shows: topic fit should be moderate (Sam's AI-forward community angle works)
+    - Wellness / mental health shows with executive or professional audience: topic fit
+      is strong — Sam speaks candidly about mental health and the toll of sales careers
+    - Personal development / mindset shows with large audiences: score audience heavily,
+      topic fit moderately — his book themes (kindness, reciprocity) translate well here
+
+    TOPICS SAM SPEAKS ON:
+    - Building Pavilion from 0 to 10,000+ members and $200M valuation
+    - The business case for kindness and reciprocity (WSJ bestselling book)
+    - Modern go-to-market strategy and what has changed in 2025
+    - Sales leadership: building high-performing revenue teams
+    - The CRO-to-CEO/founder journey and founder psychology
+    - Community as a business model and competitive moat
+    - Mental health, burnout, and resilience in high-pressure careers
+    - Bootstrapping to $10M ARR before taking outside capital
+    - AI and the future of GTM and revenue operations
+    - Why the best operators are generous, not transactional
+
+    AUDIENCE SIZE GUIDANCE (estimate from page signals — review counts, social follows, Spotify/Apple ratings):
+    - 100,000+ downloads/ep = Tier 0 (flagship — prioritize at any topic fit score above 55)
+    - 10,000+ downloads/ep = Tier 1 (ideal)
+    - 1,000–10,000 downloads/ep = Tier 2 (great fit)
+    - under 1,000 downloads/ep = Tier 3 (only if audience fit is 90%+ aligned)
+    - Score audience_size: 20 points if Tier 0 or Tier 1, 14 points if Tier 2, 5 points if Tier 3, 0 if dead/undetectable
+
+    DISQUALIFY immediately if:
+    - Last episode was more than 6 months ago (dead show)
+    - Audience is purely consumer lifestyle with zero professional or personal growth angle
+    - Show is about a completely unrelated niche (sports, cooking, true crime, politics, etc.)
+
+    PODCASTS TO AVOID (already appeared or conflicts):
+    - Topline Podcast (he hosts)
+    - Make It Happen Mondays
+    - GTMnow Podcast
+    - Sales Schema Podcast
+
+contacts:
+  use_hunter: true
+  hunter_confidence_min: 65
+  fallback_to_web_search: true
+  contact_roles_priority:
+    - "podcast"
+    - "booking"
+    - "producer"
+    - "host"
+    - "media"
+    - "marketing"
+    - "communications"
+    - "pr"
+
+outreach:
+  template_dir: "templates/sam_jacobs_podcasts"
+  initial_template: "initial_outreach.j2"   # fallback if category not matched
+  template_map:
+    b2b_sales_gtm: "initial_outreach.j2"
+    mainstream_business: "mainstream_business.j2"
+    tech_ai: "tech_ai.j2"
+    wellness_mental_health: "wellness_mental_health.j2"
+    personal_development: "personal_development.j2"
+  sam_video_url: "https://vimeo.com/1170781655"
+  follow_up_template: "follow_up.j2"
+  sender_name: "Josh Mait"
+  sender_title: "Head of Marketing, Pavilion"
+  sender_gmail: "josh.mait@joinpavilion.com"
+  guest_name: "Sam Jacobs"
+  guest_title: "Founder & CEO, Pavilion"
+  personalization:
+    model: "claude-opus-4-6"
+    enabled: true
+    fields_to_personalize:
+      - recent_episode_reference
+      - value_proposition_hook
+      - follow_up_topic_hook
+  rate_limit:
+    emails_per_day: 25
+    min_gap_seconds: 90
+
+follow_up:
+  enabled: true
+  wait_days: 7
+  max_follow_ups: 1
+  skip_if_status:
+    - "Positive Response"
+    - "Booked"
+    - "Negative Response"
+    - "Rejected"
+
+monitoring:
+  check_interval_hours: 4
+  classification_model: "claude-opus-4-6"
+  positive_keywords:
+    - "interested"
+    - "love to"
+    - "let's connect"
+    - "send more"
+    - "book"
+    - "sounds great"
+    - "would love"
+  negative_keywords:
+    - "not a fit"
+    - "pass"
+    - "not accepting"
+    - "full calendar"
+    - "unsubscribe"
+    - "remove me"
+
+tracking:
+  spreadsheet_name: "Sam Jacobs Podcast Outreach"
+  sheet_tab_name: "Prospects"
+  approval_column: "Approved"
+  notify_on_positive: true
+  notify_email: "josh.mait@joinpavilion.com"
+
+approval:
+  mode: "sheet"
+  # User opens Google Sheet and types "Yes" or "No" in column J (Approved)
+  # Rows with "Yes" → status becomes "Approved" → eligible for outreach
+  # Rows with "No"  → status becomes "Rejected" → skipped forever
+  # Rows left blank → remain "Pending Approval" → reviewed next run

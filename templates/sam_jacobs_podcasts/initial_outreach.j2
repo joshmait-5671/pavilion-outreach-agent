@@ -1,0 +1,32 @@
+Subject: Guest for {{ podcast_name }}? Pitching Sam Jacobs (Topline Podcast host, WSJ bestselling author)
+
+Hi{% if contact_name %} {{ contact_name.split()[0] }}{% endif %},
+
+{% if value_proposition_hook %}{{ value_proposition_hook }}
+
+{% endif %}
+{% if recent_episode_reference %}{{ recent_episode_reference }}
+
+{% endif %}
+I'm Josh Mait, Head of Marketing at Pavilion. I'm writing to pitch Sam Jacobs — our founder and CEO — as a guest for {{ podcast_name }}.
+
+Sam built Pavilion into the world's #1 professional community for B2B revenue leaders: 10,000+ members, offices globally, and a business valued at approximately $200M. He recently published "Kind Folks Finish First" (WSJ Bestseller), which makes the case that genuine generosity and reciprocity are competitive advantages — not weaknesses — in business.
+
+A few angles Sam goes deep on that tend to resonate with business audiences:
+
+• **Building a $200M community from scratch** — how Pavilion went from a dinner table to the defining network for GTM leaders, without ever resorting to hard selling
+• **Rethinking GTM strategy** — what's broken about how most companies approach go-to-market, and what actually works in 2025
+• **The CRO-to-founder jump** — 15+ years as a VP Sales / CRO across B2B SaaS before betting on himself
+• **Why kindness wins** — the real-world data behind his WSJ bestselling book, and how Pavilion is proof
+
+Sam is a natural on mic — direct, candid, and not afraid to share what actually happened (not just what worked). He's the host of the Topline Podcast (100K+ downloads/month), so he's extremely comfortable in long-form conversation.
+{% if sam_video_url %}You can get a feel for him here: {{ sam_video_url }}
+{% endif %}
+
+Would he be a fit for {{ podcast_name }}? I'd love to set up a quick call — happy to loop Sam in directly as well.
+
+Thanks for your time,
+
+{{ sender_name }}
+{{ sender_title }}
+josh.mait@joinpavilion.com

@@ -1,0 +1,74 @@
+program:
+  id: ai_buddy_program
+  name: "Pavilion AI Buddy Program"
+  version: "1.0"
+  owner_email: "josh.mait@joinpavilion.com"
+  created: "2026-03-05"
+
+matching:
+  # Matching priority order — first match that works wins
+  # 1. Same function + same chapter + same AI level  (ideal)
+  # 2. Same function + same chapter + adjacent AI level
+  # 3. Same function + same AI level (remote, different chapter)
+  # 4. Same function (remote, any AI level)
+  prefer_member_nonmember_mix: true   # try to pair members with non-members when possible
+  max_level_gap: 1                    # 0 = same level only, 1 = one level apart ok
+
+  functions:
+    - Sales
+    - Marketing
+    - Customer Success
+    - Revenue Operations
+    - Finance
+    - HR & People
+    - Operations
+    - Product
+    - Founder / CEO
+    - Other
+
+  ai_levels:
+    - label: "Just starting out"
+      rank: 1
+    - label: "Using it regularly"
+      rank: 2
+    - label: "Building with it"
+      rank: 3
+
+  chapters:
+    # Pavilion chapters — used for geo matching
+    - New York
+    - San Francisco
+    - Chicago
+    - Los Angeles
+    - Boston
+    - Austin
+    - London
+    - Toronto
+    - Sydney
+    - Remote / No chapter
+
+intro:
+  sender_name: "Josh Mait"
+  sender_title: "Head of Marketing, Pavilion"
+  sender_email: "josh.mait@joinpavilion.com"
+  model: "claude-opus-4-6"
+  program_description: |
+    The Pavilion AI Buddy Program pairs operators who are figuring out AI in
+    their day-to-day work. It's deliberately casual — no agenda, no scheduled
+    calls unless you want them. The idea is to have one person you can ping
+    when you find something useful, ask a question you'd feel silly Googling,
+    or compare notes on what's actually working in your function.
+    Some pairs talk weekly. Some ping each other once a month. Both are fine.
+    No stupid questions. No pressure.
+
+tracking:
+  spreadsheet_name: "Pavilion AI Buddy Program"
+  requests_tab: "Requests"
+  matches_tab: "Matches"
+  # Approval: Josh reviews the Matches tab, types "Approved" in column H
+  # Script then sends intros and marks both people as Matched in Requests tab
+  approval_column: "Approval"
+
+notifications:
+  notify_on_new_request: true
+  notify_email: "josh.mait@joinpavilion.com"

@@ -1,0 +1,87 @@
+# Example: Replicating the agent for GTM2026 conference brand outreach
+# Replace all values below to configure for your campaign
+
+campaign:
+  id: gtm2026_conference
+  name: "GTM2026 Conference Brand Outreach"
+  version: "1.0"
+  owner_email: "josh.mait@joinpavilion.com"
+  created: "2026-03-05"
+
+discovery:
+  search_queries:
+    - "fashion brand B2B conference sponsor"
+    - "fashion technology company marketing events 2026"
+    - "emerging fashion brand partnership conference"
+    - "sustainable fashion brand sponsorship"
+    - "DTC fashion brand events marketing"
+  max_results_per_query: 15
+  scrape_depth: 1
+  dedup_field: url
+
+qualification:
+  model: "claude-opus-4-6"
+  min_score: 65
+  scoring_criteria:
+    audience_relevance: 40
+    topic_fit: 30
+    episode_cadence: 15
+    audience_size_proxy: 15
+  guest_profile: |
+    GTM2026 is Pavilion's flagship annual conference for go-to-market leaders.
+    We are seeking fashion brands to participate as sponsors, exhibitors, or
+    featured partners. The conference draws 500+ senior B2B executives in sales,
+    marketing, and customer success. Fashion brands that serve professional
+    audiences, executive gifting, or corporate fashion are the ideal fit.
+
+    TARGET BRANDS: Fashion brands with products relevant to business professionals,
+    corporate gifting, or premium apparel. Modern, premium or luxury positioning preferred.
+
+contacts:
+  use_hunter: true
+  hunter_confidence_min: 65
+  fallback_to_web_search: true
+  contact_roles_priority:
+    - "partnerships"
+    - "sponsorship"
+    - "marketing"
+    - "events"
+    - "brand"
+    - "pr"
+    - "business development"
+
+outreach:
+  template_dir: "templates/gtm2026_conference"
+  initial_template: "initial_outreach.j2"
+  follow_up_template: "follow_up.j2"
+  sender_name: "Josh Mait"
+  sender_title: "Head of Marketing, Pavilion"
+  sender_gmail: "josh.mait@joinpavilion.com"
+  guest_name: "GTM2026"
+  guest_title: "Pavilion's Annual GTM Conference"
+  personalization:
+    model: "claude-opus-4-6"
+    enabled: true
+    fields_to_personalize:
+      - value_proposition_hook
+  rate_limit:
+    emails_per_day: 20
+    min_gap_seconds: 120
+
+follow_up:
+  enabled: true
+  wait_days: 10
+  max_follow_ups: 1
+
+monitoring:
+  check_interval_hours: 6
+  classification_model: "claude-opus-4-6"
+
+tracking:
+  spreadsheet_name: "GTM2026 Brand Outreach"
+  sheet_tab_name: "Prospects"
+  notify_on_positive: true
+  notify_email: "josh.mait@joinpavilion.com"
+
+approval:
+  mode: "sheet"
