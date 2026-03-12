@@ -14,6 +14,23 @@ from datetime import datetime
 import pytz
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+# ── Env var validation ────────────────────────────────────────────────────────
+REQUIRED_ENV_VARS = [
+    "ANTHROPIC_API_KEY",
+    "GMAIL_TOKEN_B64",
+]
+
+def check_required_env_vars():
+    missing = [v for v in REQUIRED_ENV_VARS if not os.environ.get(v)]
+    if missing:
+        print("=" * 60)
+        print("ERROR: Missing required environment variables:")
+        for v in missing:
+            print(f"  ✗ {v}")
+        print("=" * 60)
+        sys.exit(1)
+    print(f"✓ All {len(REQUIRED_ENV_VARS)} required env vars present.")
+
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s"
@@ -49,6 +66,7 @@ def run_monitor():
 
 # ── Scheduler ─────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    check_required_env_vars()
     write_token_from_env()
 
     scheduler = BlockingScheduler(timezone="America/New_York")
