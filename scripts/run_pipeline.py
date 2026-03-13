@@ -29,7 +29,10 @@ def main(campaign, campaigns_dir, db_path, skip_discovery, skip_contacts,
          skip_outreach, skip_monitor, skip_followup, dry_run):
     """Run the full outreach pipeline for a campaign."""
     from src.config import load_campaign
-    from src.tracking.database import get_db, initialize_db, get_spreadsheet_id
+    from src.tracking.database import (
+        get_db, initialize_db, get_spreadsheet_id, save_spreadsheet_id,
+        upsert_campaign, get_prospect_count,
+    )
     from src.tracking.sheets import get_sheets_client
     from src.outreach.sender import get_gmail_service
     from src.workflow.orchestrator import run_full_pipeline
@@ -45,16 +48,38 @@ def main(campaign, campaigns_dir, db_path, skip_discovery, skip_contacts,
     initialize_db(db_path)
     conn = get_db(db_path)
 
+    # Ensure campaign record exists in DB (critical for ephemeral Railway deploys)
+    upsert_campaign(conn, config.id, config.name, f"{campaigns_dir}/{campaign}.yaml")
+
     sheets_client = None
     spreadsheet_id = get_spreadsheet_id(conn, config.id)
     sa_path = os.getenv("GOOGLE_SERVICE_ACCOUNT_PATH", "auth/service_account.json")
     gmail_token = os.getenv("GMAIL_TOKEN_PATH", "auth/gmail_token.json")
+
+    # Allow spreadsheet_id from env var (needed for fresh Railway deploys)
+    if not spreadsheet_id:
+        env_sid = os.getenv("SPREADSHEET_ID")
+        if env_sid:
+            save_spreadsheet_id(conn, config.id, env_sid)
+            spreadsheet_id = env_sid
+            console.print(f"[cyan]Set spreadsheet_id from env var:[/] {env_sid[:20]}...")
 
     if spreadsheet_id:
         try:
             sheets_client = get_sheets_client(sa_path, gmail_token)
         except Exception as e:
             console.print(f"[yellow]Sheets unavailable:[/] {e}")
+
+    # Bootstrap prospects from Sheet if DB is empty (ephemeral Railway deploys)
+    if sheets_client and spreadsheet_id:
+        from src.tracking.sheets import bootstrap_prospects_from_sheet
+        existing = get_prospect_count(conn, config.id)
+        if existing == 0:
+            console.print("[cyan]Empty DB detected — bootstrapping prospects from Google Sheet...[/]")
+            synced = bootstrap_prospects_from_sheet(
+                sheets_client, spreadsheet_id, config.sheet_tab_name, conn, config.id
+            )
+            console.print(f"[green]Bootstrapped {synced} prospects from Sheet[/]")
 
     gmail_service = None
     if not dry_run and not skip_outreach and not skip_monitor and not skip_followup:

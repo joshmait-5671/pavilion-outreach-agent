@@ -278,6 +278,74 @@ def read_all_rows(
     return ws.get_all_records()
 
 
+def bootstrap_prospects_from_sheet(
+    client: gspread.Client,
+    spreadsheet_id: str,
+    tab_name: str,
+    db_conn,
+    campaign_id: str,
+) -> int:
+    """Read all rows from the Google Sheet and upsert them into the DB.
+
+    This is needed on Railway where the SQLite DB is ephemeral and starts
+    fresh on every deploy.  Returns the number of prospects synced.
+    """
+    from src.tracking import database as _db  # local import to avoid circulars
+
+    rows = read_all_rows(client, spreadsheet_id, tab_name)
+    synced = 0
+
+    def _str(val) -> str:
+        """Safely convert cell value to stripped string."""
+        if val is None or val == "":
+            return ""
+        return str(val).strip()
+
+    for i, row in enumerate(rows):
+        row_number = i + 2  # +2 because header is row 1, enumerate starts at 0
+        podcast_name = _str(row.get("Podcast Name"))
+        podcast_url = _str(row.get("URL"))
+        if not podcast_name or not podcast_url:
+            continue
+
+        score_raw = row.get("Score", "")
+        try:
+            score = int(score_raw) if score_raw not in ("", None, 0) else None
+        except (ValueError, TypeError):
+            score = None
+
+        status = _str(row.get("Status")) or "Pending Approval"
+
+        prospect = Prospect(
+            campaign_id=campaign_id,
+            podcast_name=podcast_name,
+            podcast_url=podcast_url,
+            category=_str(row.get("Category")) or None,
+            estimated_audience_size=_str(row.get("Audience Size")) or None,
+            host_name=_str(row.get("Host")) or None,
+            booking_contact_name=_str(row.get("Contact Name")) or None,
+            booking_contact_email=_str(row.get("Contact Email")) or None,
+            contact_source=_str(row.get("Contact Source")) or None,
+            qualification_score=score,
+            status=status,
+            approval_status="Pending Approval",  # will be updated by approval sync
+            sheet_row_number=row_number,
+        )
+
+        prospect_id = _db.upsert_prospect(db_conn, prospect)
+
+        # Set fields not covered by the upsert INSERT
+        _db.update_prospect_fields(db_conn, prospect_id, {
+            "booking_contact_name": prospect.booking_contact_name or "",
+            "booking_contact_email": prospect.booking_contact_email or "",
+            "contact_source": prospect.contact_source or "",
+            "sheet_row_number": row_number,
+        })
+        synced += 1
+
+    return synced
+
+
 def apply_status_color(
     client: gspread.Client,
     spreadsheet_id: str,

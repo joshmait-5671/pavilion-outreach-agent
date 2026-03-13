@@ -241,6 +241,14 @@ def get_prospects_by_status(conn: sqlite3.Connection, campaign_id: str, status: 
     return [_row_to_prospect(r) for r in rows]
 
 
+def get_prospect_count(conn: sqlite3.Connection, campaign_id: str) -> int:
+    """Return count of prospects for a campaign."""
+    row = conn.execute(
+        "SELECT COUNT(*) FROM prospects WHERE campaign_id=?", (campaign_id,)
+    ).fetchone()
+    return row[0] if row else 0
+
+
 def get_prospects_by_campaign(conn: sqlite3.Connection, campaign_id: str) -> list[Prospect]:
     """Fetch all prospects for a campaign."""
     rows = conn.execute(
