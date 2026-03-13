@@ -335,12 +335,15 @@ def bootstrap_prospects_from_sheet(
         prospect_id = _db.upsert_prospect(db_conn, prospect)
 
         # Set fields not covered by the upsert INSERT
-        _db.update_prospect_fields(db_conn, prospect_id, {
-            "booking_contact_name": prospect.booking_contact_name or "",
-            "booking_contact_email": prospect.booking_contact_email or "",
-            "contact_source": prospect.contact_source or "",
-            "sheet_row_number": row_number,
-        })
+        # Use None (not "") for empty values so IS NULL checks work correctly
+        updates = {"sheet_row_number": row_number}
+        if prospect.booking_contact_name:
+            updates["booking_contact_name"] = prospect.booking_contact_name
+        if prospect.booking_contact_email:
+            updates["booking_contact_email"] = prospect.booking_contact_email
+        if prospect.contact_source:
+            updates["contact_source"] = prospect.contact_source
+        _db.update_prospect_fields(db_conn, prospect_id, updates)
         synced += 1
 
     return synced
