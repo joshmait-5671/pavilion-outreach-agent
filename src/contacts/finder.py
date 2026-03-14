@@ -157,7 +157,9 @@ def _extract_emails(text: str) -> list[str]:
     EMAIL_RE = re.compile(r"[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}")
     NOISE = re.compile(
         r"(example\.com|test\.com|@2x\.|\.png|\.jpg|noreply|no-reply|"
-        r"sentry\.io|wix|squarespace|wordpress)"
+        r"sentry\.io|wix|squarespace|wordpress|duckduckgo\.com|"
+        r"google\.com|bing\.com|yahoo\.com|github\.com|"
+        r"cloudflare\.com|amazonaws\.com|netlify\.com|vercel\.com)"
     )
     seen: set[str] = set()
     result = []

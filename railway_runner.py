@@ -77,10 +77,6 @@ if __name__ == "__main__":
     # Monitor replies every 4 hours
     scheduler.add_job(run_monitor, "interval", hours=4)
 
-    # Run pipeline once immediately on deploy (catches up after redeploy)
-    log.info("Running pipeline immediately on deploy...")
-    run_daily_pipeline()
-
     log.info("Outreach Agent scheduler started.")
     log.info("  - Daily pipeline: 9am ET Mon-Fri")
     log.info("  - Reply monitor: every 4 hours")
