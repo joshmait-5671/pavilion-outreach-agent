@@ -108,6 +108,18 @@ def main(campaign, campaigns_dir, db_path, skip_discovery, skip_contacts,
         anthropic_client=anthropic_client,
     )
 
+    # Daily Slack digest — only on full pipeline runs that include outreach
+    # (skip on dry-run and on partial monitor-only runs)
+    if not dry_run and not skip_outreach:
+        try:
+            from src.tracking.database import build_daily_stats
+            from src.outreach.slack_approval import daily_digest
+            stats = build_daily_stats(conn, config.id)
+            daily_digest(stats)
+            console.print(f"[cyan]Daily digest sent to Slack:[/] {stats}")
+        except Exception as e:
+            console.print(f"[yellow]Daily digest failed (non-fatal):[/] {e}")
+
     conn.close()
 
     # Summary table

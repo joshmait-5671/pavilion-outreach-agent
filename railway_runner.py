@@ -58,6 +58,8 @@ def run_daily_pipeline():
         log.info("Weekend — skipping pipeline.")
         return
     log.info("Running daily outreach pipeline...")
+    # End-of-run Slack daily digest fires inside scripts/run_pipeline.py
+    # (after run_full_pipeline returns, before conn.close).
     os.system("python scripts/run_pipeline.py --campaign sam_jacobs_podcasts --skip-discovery")
 
 def run_monitor():

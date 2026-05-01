@@ -493,6 +493,61 @@ def get_prospects_needing_contacts(conn: sqlite3.Connection, campaign_id: str) -
     return [_row_to_prospect(r) for r in rows]
 
 
+def build_daily_stats(conn: sqlite3.Connection, campaign_id: str) -> dict:
+    """Aggregate today's pipeline stats for the Slack daily digest."""
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+
+    sent = conn.execute(
+        """SELECT COUNT(*) AS c FROM email_log
+           WHERE campaign_id=? AND email_type IN ('initial','follow_up')
+             AND date(sent_at) = date('now')""",
+        (campaign_id,),
+    ).fetchone()["c"]
+
+    reply_rows = conn.execute(
+        """SELECT classification, COUNT(*) AS c FROM replies
+           WHERE campaign_id=? AND date(received_at) = date('now')
+           GROUP BY classification""",
+        (campaign_id,),
+    ).fetchall()
+    by_class = {r["classification"]: r["c"] for r in reply_rows}
+    replies = sum(by_class.values())
+
+    pending = conn.execute(
+        "SELECT COUNT(*) AS c FROM prospects WHERE campaign_id=? AND approval_status='Pending Approval'",
+        (campaign_id,),
+    ).fetchone()["c"]
+
+    queued = conn.execute(
+        """SELECT COUNT(*) AS c FROM prospects
+           WHERE campaign_id=? AND approval_status='Approved'
+             AND initial_email_sent_at IS NULL
+             AND booking_contact_email IS NOT NULL""",
+        (campaign_id,),
+    ).fetchone()["c"]
+
+    fu_tomorrow = conn.execute(
+        """SELECT COUNT(*) AS c FROM prospects
+           WHERE campaign_id=?
+             AND initial_email_sent_at IS NOT NULL
+             AND status NOT IN ('Positive Response','Booked','Negative Response','Rejected')
+             AND date(initial_email_sent_at, '+7 days') = date('now','+1 day')""",
+        (campaign_id,),
+    ).fetchone()["c"]
+
+    return {
+        "date": today,
+        "sent": sent,
+        "replies": replies,
+        "positive": by_class.get("positive", 0),
+        "neutral": by_class.get("neutral", 0),
+        "negative": by_class.get("negative", 0),
+        "pending": pending,
+        "queued": queued,
+        "followups_tomorrow": fu_tomorrow,
+    }
+
+
 # --- helpers ---
 
 def _dt() -> str:

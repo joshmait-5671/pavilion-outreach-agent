@@ -375,6 +375,17 @@ def run_outreach_phase(
         console.print(f"    [green]Sent![/] Thread: {result['thread_id']}")
         sent_count += 1
 
+        # Slack confirmation ping (best-effort, threaded under approval DM if we have ts)
+        try:
+            from src.outreach.slack_approval import post_send_confirmation
+            post_send_confirmation(
+                {"podcast_name": prospect.podcast_name},
+                sent_to=prospect.booking_contact_email,
+                message_ts=prospect.slack_message_ts,
+            )
+        except Exception as e:
+            console.print(f"    [dim yellow]Slack send-confirm failed (non-fatal): {e}[/]")
+
         # Rate limit gap
         if sent_count < remaining_today:
             time.sleep(config.min_gap_seconds)
@@ -466,6 +477,18 @@ def run_monitoring_phase(
                 _send_positive_notification(
                     gmail_service, config, prospect, reply.body_snippet
                 )
+
+            # Slack reply ping (best-effort, threaded under approval DM)
+            try:
+                from src.outreach.slack_approval import post_reply_received
+                post_reply_received(
+                    {"podcast_name": prospect.podcast_name if prospect else "Unknown"},
+                    classification=cls,
+                    snippet=reply.body_snippet or "",
+                    message_ts=prospect.slack_message_ts if prospect else None,
+                )
+            except Exception as e:
+                console.print(f"    [dim yellow]Slack reply ping failed (non-fatal): {e}[/]")
 
         processed += 1
 

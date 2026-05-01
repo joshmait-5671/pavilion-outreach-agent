@@ -97,6 +97,18 @@ def send_followup_email(
         update_fields["follow_up_2_message_id"] = result["message_id"]
     db.update_prospect_fields(db_conn, prospect.id, update_fields)
 
+    # Slack confirmation ping (best-effort, threaded under the approval DM)
+    try:
+        from src.outreach.slack_approval import post_send_confirmation
+        touch_label = "Touch 3" if is_second_followup else "Touch 2"
+        post_send_confirmation(
+            {"podcast_name": f"{prospect.podcast_name} ({touch_label})"},
+            sent_to=to_addr,
+            message_ts=prospect.slack_message_ts,
+        )
+    except Exception as e:
+        print(f"  [!] Slack follow-up confirm failed (non-fatal): {e}")
+
     # Log email
     log_entry = EmailLogEntry(
         prospect_id=prospect.id,
