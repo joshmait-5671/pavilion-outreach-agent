@@ -1,15 +1,15 @@
-Subject: Re: Guest for {{ podcast_name }}? Pitching Sam Jacobs (Pavilion founder, WSJ bestselling author)
+Subject: Re: AI Pulse Report — {% if recent_episode_topic %}your {{ recent_episode_topic }}{% else %}thinking on AI in GTM{% endif %}
 
 Hi{% if contact_name %} {{ contact_name.split()[0] }}{% endif %},
 
-Just a quick follow-up on my note from {{ initial_sent_date }} — wanted to make sure it didn't get buried.
+{% if recent_episode_topic %}Caught your recent episode on {{ recent_episode_topic }}.{% else %}Following up on the AI Pulse Report I sent last week.{% endif %} Wanted to flag something from the report that maps to it directly:
 
-Sam is still available and genuinely excited about the possibility of appearing on {{ podcast_name }}. Given what you cover, I think your audience would connect with his perspective on {{ follow_up_topic_hook or "building a business where doing the right thing and driving results aren't in conflict" }}.
+{% if specific_data_hook %}{{ specific_data_hook }}{% else %}57% of teams expect SDR roles to be most disrupted by AI in the next three years. Account Exec roles, only 15%. The volume-based work is going first.{% endif %}
 
-If the timing isn't right or he's not a fit, no worries at all — just let me know and I won't follow up again. But if there's any interest, I'm happy to make it easy: bio, talking points, and scheduling link all ready to go.
+Sam's view on this in particular tends to surprise people — partly because he's running the data and the community at the same time, and partly because he doesn't think the conventional wisdom is right.
 
-Thanks again,
+If having him on to riff would be useful, the door's open. He's at one a week, low-fi setup, ready in 48 hours of notice.
+
+If not, no further follow-up. Just wanted to put the option on the table while it's fresh.
 
 {{ sender_name }}
-{{ sender_title }}
-josh.mait@joinpavilion.com

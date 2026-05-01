@@ -131,6 +131,22 @@ class CampaignConfig:
         return self.outreach.get("follow_up_template", "follow_up.j2")
 
     @property
+    def follow_up_2_template(self) -> str:
+        """Template for the second follow-up (Touch 3). Falls back to follow_up_template."""
+        return self.outreach.get("follow_up_2_template", self.follow_up_template)
+
+    @property
+    def ai_pulse_report_url(self) -> str:
+        return self.outreach.get("ai_pulse_report_url", "https://pavilion-ai-pulse.netlify.app")
+
+    @property
+    def calendar_link(self) -> str:
+        return self.outreach.get(
+            "calendar_link",
+            "https://calendly.com/joshmait-100yardstogo/sam-jacobs-podcast-intro",
+        )
+
+    @property
     def personalization_enabled(self) -> bool:
         return self.outreach.get("personalization", {}).get("enabled", True)
 

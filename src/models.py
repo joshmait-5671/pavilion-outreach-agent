@@ -50,6 +50,12 @@ class Prospect:
     follow_up_sent_at: Optional[datetime] = None
     follow_up_message_id: Optional[str] = None
     follow_up_count: int = 0
+    follow_up_2_sent_at: Optional[datetime] = None
+    follow_up_2_message_id: Optional[str] = None
+
+    # Slack approval flow
+    slack_message_ts: Optional[str] = None
+    slack_notes: Optional[str] = None
 
     # Response monitoring
     last_reply_received_at: Optional[datetime] = None

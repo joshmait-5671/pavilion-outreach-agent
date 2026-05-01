@@ -39,12 +39,24 @@ def send_followup_email(
     tab_name: Optional[str],
     anthropic_client=None,
 ) -> bool:
-    """Compose and send follow-up email as a reply in the original thread."""
+    """Compose and send follow-up email as a reply in the original thread.
+
+    Picks template based on follow_up_count:
+      - count 0 → first follow-up (Touch 2): config.follow_up_template
+      - count 1 → second follow-up (Touch 3): config.follow_up_2_template (defaults to follow_up_template)
+    """
+    is_second_followup = (prospect.follow_up_count or 0) >= 1
+    template_name = (
+        getattr(config, "follow_up_2_template", None) or config.follow_up_template
+        if is_second_followup
+        else config.follow_up_template
+    )
+
     # Compose
     try:
         subject, body = composer.compose_email(
             prospect=prospect,
-            template_name=config.follow_up_template,
+            template_name=template_name,
             config=config,
             client=anthropic_client,
         )
@@ -71,14 +83,19 @@ def send_followup_email(
         return False
 
     now = datetime.utcnow()
+    new_count = (prospect.follow_up_count or 0) + 1
 
-    # Update DB
-    db.update_prospect_fields(db_conn, prospect.id, {
+    # Update DB — track which follow-up this is via separate timestamp columns
+    update_fields = {
         "follow_up_sent_at": now.isoformat(),
         "follow_up_message_id": result["message_id"],
-        "follow_up_count": (prospect.follow_up_count or 0) + 1,
-        "status": "Follow-up Sent",
-    })
+        "follow_up_count": new_count,
+        "status": "Follow-up 2 Sent" if is_second_followup else "Follow-up Sent",
+    }
+    if is_second_followup:
+        update_fields["follow_up_2_sent_at"] = now.isoformat()
+        update_fields["follow_up_2_message_id"] = result["message_id"]
+    db.update_prospect_fields(db_conn, prospect.id, update_fields)
 
     # Log email
     log_entry = EmailLogEntry(

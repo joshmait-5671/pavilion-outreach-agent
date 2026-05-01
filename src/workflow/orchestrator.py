@@ -136,6 +136,24 @@ def run_discovery_phase(
             except Exception as e:
                 console.print(f"    [yellow]Sheet update failed: {e}[/]")
 
+        # DM Josh on Slack for approval (best-effort, non-blocking)
+        try:
+            from src.outreach.slack_approval import send_prospect_for_approval
+            slack_ts = send_prospect_for_approval({
+                "podcast_name": prospect.podcast_name,
+                "podcast_url": prospect.podcast_url,
+                "host_name": prospect.host_name or "—",
+                "audience": prospect.estimated_audience_size or "",
+                "score": prospect.qualification_score,
+                "why_fit": prospect.qualification_notes or "",
+                "recent_episode": page_data.get("recent_episode_title", ""),
+            })
+            if slack_ts:
+                db.update_prospect_field(db_conn, prospect_id, "slack_message_ts", slack_ts)
+                console.print(f"    [cyan]Slack DM sent (ts={slack_ts})[/]")
+        except Exception as e:
+            console.print(f"    [dim yellow]Slack DM failed (non-fatal): {e}[/]")
+
         new_count += 1
         time.sleep(1)  # Gentle rate limit between scrapes
 
@@ -235,13 +253,20 @@ def run_outreach_phase(
 
     run_id = db.log_run(db_conn, config.id, "outreach")
 
-    # 1. Sync approvals from Sheet
+    # 1. Sync approvals — Slack first (👍/✋ reactions + thread notes), Sheet as fallback
+    slack_approved, slack_rejected = appr.sync_approvals_from_slack(db_conn, config.id)
+    if slack_approved or slack_rejected:
+        console.print(
+            f"  Slack approval sync: +{slack_approved} approved, "
+            f"+{slack_rejected} killed"
+        )
+
     if sheets_client and spreadsheet_id and config.approval_mode == "sheet":
         approved, rejected = appr.sync_approvals_from_sheet(
             sheets_client, db_conn, config.id, spreadsheet_id, config.sheet_tab_name
         )
         if approved or rejected:
-            console.print(f"  Approval sync: +{approved} approved, +{rejected} rejected")
+            console.print(f"  Sheet approval sync: +{approved} approved, +{rejected} rejected")
 
     # 2. Get prospects due for outreach
     prospects = db.get_approved_prospects_due_for_outreach(db_conn, config.id)

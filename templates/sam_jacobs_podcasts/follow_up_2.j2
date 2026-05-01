@@ -1,0 +1,11 @@
+Subject: One more thing
+
+Hi{% if contact_name %} {{ contact_name.split()[0] }}{% endif %},
+
+Last note from us. Putting a calendar link out there in case the timing wasn't right last week:
+
+{% if calendar_link %}{{ calendar_link }}{% else %}https://calendly.com/joshmait-100yardstogo/sam-jacobs-podcast-intro{% endif %}
+
+If a different angle would land better for {{ podcast_name }}, I'm happy to think about it. Otherwise, hope the report was useful and good luck with the rest of the season.
+
+{{ sender_name }}

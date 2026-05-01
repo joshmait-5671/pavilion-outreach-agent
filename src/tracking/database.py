@@ -62,6 +62,10 @@ CREATE TABLE IF NOT EXISTS prospects (
     follow_up_sent_at TEXT,
     follow_up_message_id TEXT,
     follow_up_count INTEGER DEFAULT 0,
+    follow_up_2_sent_at TEXT,
+    follow_up_2_message_id TEXT,
+    slack_message_ts TEXT,
+    slack_notes TEXT,
     last_reply_received_at TEXT,
     last_reply_snippet TEXT,
     reply_classification TEXT,
@@ -141,8 +145,25 @@ def initialize_db(db_path: str = "data/outreach.db") -> None:
     """Create all tables if they don't exist. Safe to call repeatedly."""
     conn = get_db(db_path)
     conn.executescript(_SCHEMA)
+    # Idempotent migrations for new columns added after initial deploy
+    _migrate_add_columns(conn)
     conn.commit()
     conn.close()
+
+
+def _migrate_add_columns(conn: sqlite3.Connection) -> None:
+    """Add columns added after initial schema. Each ALTER is safe to skip if column exists."""
+    new_cols = [
+        ("prospects", "follow_up_2_sent_at", "TEXT"),
+        ("prospects", "follow_up_2_message_id", "TEXT"),
+        ("prospects", "slack_message_ts", "TEXT"),
+        ("prospects", "slack_notes", "TEXT"),
+    ]
+    for table, col, coltype in new_cols:
+        try:
+            conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {coltype}")
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
 
 def upsert_campaign(conn: sqlite3.Connection, campaign_id: str, name: str, config_path: str) -> None:
@@ -310,17 +331,35 @@ def get_approved_prospects_due_for_outreach(conn: sqlite3.Connection, campaign_i
 def get_prospects_due_for_followup(
     conn: sqlite3.Connection, campaign_id: str, wait_days: int, max_follow_ups: int
 ) -> list[Prospect]:
-    """Return prospects where initial email was sent > wait_days ago and follow-up not yet sent."""
+    """Return prospects past the wait window for their next follow-up.
+
+    Three-touch cadence:
+      - count 0 + status='Email Sent' + wait_days since initial   → due for FU1
+      - count 1 + status='Follow-up Sent' + wait_days since FU1   → due for FU2
+    """
     rows = conn.execute(
         f"""
         SELECT * FROM prospects
         WHERE campaign_id=?
-          AND status='Email Sent'
           AND follow_up_count < ?
-          AND initial_email_sent_at IS NOT NULL
-          AND datetime(initial_email_sent_at, '+{wait_days} days') <= datetime('now')
-          AND follow_up_sent_at IS NULL
-        ORDER BY initial_email_sent_at ASC
+          AND (
+            (
+              follow_up_count = 0
+              AND status = 'Email Sent'
+              AND initial_email_sent_at IS NOT NULL
+              AND datetime(initial_email_sent_at, '+{wait_days} days') <= datetime('now')
+              AND follow_up_sent_at IS NULL
+            )
+            OR
+            (
+              follow_up_count = 1
+              AND status = 'Follow-up Sent'
+              AND follow_up_sent_at IS NOT NULL
+              AND datetime(follow_up_sent_at, '+{wait_days} days') <= datetime('now')
+              AND follow_up_2_sent_at IS NULL
+            )
+          )
+        ORDER BY COALESCE(follow_up_sent_at, initial_email_sent_at) ASC
         """,
         (campaign_id, max_follow_ups),
     ).fetchall()

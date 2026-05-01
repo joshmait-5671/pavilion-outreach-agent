@@ -85,6 +85,47 @@ def get_pending_approval_prospects(
     return db.get_prospects_by_status(db_conn, campaign_id, "Pending Approval")
 
 
+def sync_approvals_from_slack(
+    db_conn: sqlite3.Connection,
+    campaign_id: str,
+) -> tuple[int, int]:
+    """Read 👍 / ✋ reactions on Slack approval DMs and update DB statuses.
+    Also captures any thread-reply notes from Josh into prospect.slack_notes
+    (used downstream by the email composer for personalization).
+
+    Returns (newly_approved_count, newly_rejected_count). Best-effort —
+    silently no-ops if SLACK_BOT_TOKEN / scopes aren't set.
+    """
+    try:
+        from src.outreach.slack_approval import check_approval_status
+    except Exception:
+        return (0, 0)
+
+    pending = get_pending_approval_prospects(db_conn, campaign_id)
+    newly_approved = 0
+    newly_rejected = 0
+
+    for prospect in pending:
+        if not prospect.slack_message_ts:
+            continue
+        result = check_approval_status(prospect.slack_message_ts)
+
+        # Always capture notes if present (even if still pending)
+        if result.get("notes"):
+            db.update_prospect_field(
+                db_conn, prospect.id, "slack_notes", result["notes"]
+            )
+
+        if result["status"] == "approved":
+            mark_approved(db_conn, prospect.id)
+            newly_approved += 1
+        elif result["status"] == "killed":
+            mark_rejected(db_conn, prospect.id)
+            newly_rejected += 1
+
+    return (newly_approved, newly_rejected)
+
+
 def mark_approved(db_conn: sqlite3.Connection, prospect_id: int) -> None:
     """Set status='Approved', approval_status='Approved', approved_at=now."""
     db.update_prospect_fields(db_conn, prospect_id, {

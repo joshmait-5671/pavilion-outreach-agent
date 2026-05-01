@@ -42,12 +42,20 @@ def compose_email(
         "category": prospect.category or "",
         "sender_name": config.sender_name,
         "sender_title": config.sender_title,
+        "sender_email": getattr(config, "sender_gmail", "josh.mait@joinpavilion.com"),
         "guest_name": config.guest_name,
         "guest_title": config.guest_title,
         "recent_episode_reference": personalization.get("recent_episode_reference", ""),
+        "recent_episode_topic": personalization.get("recent_episode_topic", ""),
+        "specific_data_hook": personalization.get("specific_data_hook", ""),
         "value_proposition_hook": personalization.get("value_proposition_hook", ""),
         "follow_up_topic_hook": personalization.get("follow_up_topic_hook", ""),
         "initial_sent_date": _fmt_date(prospect.initial_email_sent_at),
+        # Campaign-level extras (read from config raw if present)
+        "ai_pulse_report_url": getattr(config, "ai_pulse_report_url", "https://pavilion-ai-pulse.netlify.app"),
+        "calendar_link": getattr(config, "calendar_link", "https://calendly.com/joshmait-100yardstogo/sam-jacobs-podcast-intro"),
+        # Slack-driven personalization (Josh's thread reply notes)
+        "slack_notes": prospect.slack_notes or "",
     }
     if extra_vars:
         context.update(extra_vars)
@@ -99,6 +107,8 @@ def _generate_personalization(
             "recent_episode_reference": data.get("recent_episode_reference", ""),
             "value_proposition_hook": data.get("value_proposition_hook", ""),
             "follow_up_topic_hook": data.get("follow_up_topic_hook", ""),
+            "recent_episode_topic": data.get("recent_episode_topic", ""),
+            "specific_data_hook": data.get("specific_data_hook", ""),
         }
     except Exception:
         return {}
@@ -138,13 +148,25 @@ SENDER (writing the email):
 - Name: {config.sender_name}
 - Title: {config.sender_title}
 
-Generate THREE personalization fields for this specific podcast. Be genuine and specific — not generic.
+NOTES FROM JOSH (Slack thread, may be empty — if present, weight heavily):
+{prospect.slack_notes or '(none)'}
+
+VOICE GUIDE for any text you generate:
+- "Playboy with the Economist at the Waverly Inn" — confident, well-read, dry, peer-to-peer.
+- Brief is the message. No "hope this finds you well." No "looking forward to."
+- One em-dash maximum.
+- No triple parallel constructions. No "Not X. Not Y. The Z." patterns.
+- Specific over general. A stat or a quote beats an adjective.
+
+Generate personalization fields for this specific podcast. Be genuine and specific — not generic.
 
 Respond with ONLY valid JSON:
 {{
-  "value_proposition_hook": "<1-2 sentences that open the email by connecting {config.guest_name}'s unique story to THIS podcast's specific audience — reference the podcast's topic/focus. Do not be sycophantic. Be direct and specific.>",
-  "recent_episode_reference": "<If there are recent episodes listed above, reference ONE specific episode by name and explain in 1 sentence why it makes this pitch a natural fit. If no episodes are known, write an empty string.>",
-  "follow_up_topic_hook": "<A 5-10 word phrase completing: 'I think your audience would connect with his perspective on...' — make it specific to this podcast's category>"
+  "value_proposition_hook": "<1-2 sentences. Used in the v1 template only. Connect Sam's story to THIS podcast's specific audience.>",
+  "recent_episode_reference": "<v1 template field. Reference one specific recent episode by name + 1 sentence on fit. Empty string if no episodes listed.>",
+  "follow_up_topic_hook": "<v1 template field. 5-10 word phrase completing 'his perspective on...'>",
+  "recent_episode_topic": "<v2 follow-up template field. Just the topic of one recent episode in 3-6 words (e.g. 'AI in sales hiring' or 'the SDR role'). Empty string if no episodes listed.>",
+  "specific_data_hook": "<v2 follow-up template field. ONE concrete data point from the AI Pulse Report most likely to interest THIS specific podcast's audience, written as a 1-2 sentence callout. Examples (don't reuse, generate fresh per podcast): '57% of teams expect SDR roles to be the most disrupted, only 15% for AEs. The volume work goes first.' / 'Career optimism is 7.9 out of 10. Job security anxiety is 5.1. Same person feels both — that's the change-management story.' Pick the data that matches their show.>"
 }}"""
 
 

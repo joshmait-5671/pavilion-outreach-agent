@@ -248,6 +248,9 @@ outreach:
     personal_development: "personal_development.j2"
   sam_video_url: "https://vimeo.com/1170781655"
   follow_up_template: "follow_up.j2"
+  follow_up_2_template: "follow_up_2.j2"
+  ai_pulse_report_url: "https://pavilion-ai-pulse.netlify.app"
+  calendar_link: "https://calendly.com/joshmait-100yardstogo/sam-jacobs-podcast-intro"
   sender_name: "Josh Mait"
   sender_title: "Head of Marketing, Pavilion"
   sender_gmail: "josh.mait@joinpavilion.com"
@@ -267,7 +270,7 @@ outreach:
 follow_up:
   enabled: true
   wait_days: 7
-  max_follow_ups: 1
+  max_follow_ups: 2  # Three-touch cadence: initial + 2 follow-ups (touches 2 and 3)
   skip_if_status:
     - "Positive Response"
     - "Booked"
