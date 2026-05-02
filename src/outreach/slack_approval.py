@@ -224,6 +224,58 @@ def post_reply_received(prospect: dict, classification: str, snippet: str, messa
         log.warning(f"Reply notification failed: {e.response['error']}")
 
 
+def post_manual_send_payload(
+    prospect: dict,
+    subject: str,
+    body: str,
+    message_ts: Optional[str] = None,
+) -> None:
+    """For marquee podcasts whose contact email the agent can't find — DM Josh
+    a copy-paste-ready email payload so he can send it himself from his own inbox."""
+    client = _client()
+    if not client:
+        return
+    channel_id = _open_dm(client, JOSH_USER_ID)
+    if not channel_id:
+        return
+
+    podcast_name = prospect.get("podcast_name", "Unknown podcast")
+    podcast_url = prospect.get("podcast_url", "")
+    host = prospect.get("host_name", "—")
+
+    header_text = (
+        f"✋ *Manual send needed — {podcast_name}*\n"
+        f"_Host:_ *{host}*  ·  Agent couldn't find a booking email. "
+        f"Find one yourself, then send the below from your own inbox."
+    )
+    if podcast_url:
+        header_text = f"✋ *Manual send needed — <{podcast_url}|{podcast_name}>*\n" + header_text.split("\n", 1)[1]
+
+    payload_text = f"*Subject:* {subject}\n\n```\n{body}\n```"
+
+    blocks = [
+        {"type": "section", "text": {"type": "mrkdwn", "text": header_text}},
+        {"type": "section", "text": {"type": "mrkdwn", "text": payload_text}},
+        {"type": "context", "elements": [{
+            "type": "mrkdwn",
+            "text": (
+                "Marked _Manual Outreach Queued_ in DB — won't re-DM tomorrow. "
+                "Follow-ups for this prospect are also manual."
+            ),
+        }]},
+    ]
+
+    try:
+        kwargs = {"channel": channel_id, "blocks": blocks,
+                  "text": f"✋ Manual send needed for {podcast_name}",
+                  "unfurl_links": False, "unfurl_media": False}
+        if message_ts:
+            kwargs["thread_ts"] = message_ts
+        client.chat_postMessage(**kwargs)
+    except SlackApiError as e:
+        log.warning(f"Manual send payload failed: {e.response['error']}")
+
+
 def daily_digest(stats: dict) -> None:
     """End-of-day summary DM."""
     client = _client()

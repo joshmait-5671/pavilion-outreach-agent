@@ -294,7 +294,45 @@ def run_outreach_phase(
             break
 
         if not prospect.booking_contact_email:
-            console.print(f"  [dim]Skipping {prospect.podcast_name} — no contact email[/]")
+            # Hybrid mode: agent can't find a booking email (typically marquee shows
+            # like Diary of a CEO, 20VC, How I Built This). Render the templated
+            # email and DM Josh the copy-paste payload — he sends from his own inbox.
+            console.print(f"  [magenta]Manual send queued: {prospect.podcast_name} — no contact email, deferring to Josh[/]")
+            try:
+                template_name = config.get_template_for_category(prospect.category)
+                subject_m, body_m = composer.compose_email(
+                    prospect=prospect,
+                    template_name=template_name,
+                    config=config,
+                    client=anthropic_client,
+                    extra_vars={"sam_video_url": config.outreach.get("sam_video_url", "")},
+                )
+            except Exception as e:
+                console.print(f"    [red]Manual-render compose error:[/] {e}")
+                continue
+
+            if dry_run:
+                console.print(f"    [yellow][DRY RUN][/] Would DM Josh manual payload — Subject: {subject_m}")
+                continue
+
+            try:
+                from src.outreach.slack_approval import post_manual_send_payload
+                post_manual_send_payload(
+                    {"podcast_name": prospect.podcast_name,
+                     "podcast_url": prospect.podcast_url,
+                     "host_name": prospect.host_name or "—"},
+                    subject=subject_m,
+                    body=body_m,
+                    message_ts=prospect.slack_message_ts,
+                )
+            except Exception as e:
+                console.print(f"    [yellow]Slack manual-payload DM failed:[/] {e}")
+
+            db.update_prospect_fields(db_conn, prospect.id, {
+                "status": "Manual Outreach Queued",
+                "initial_email_subject": subject_m,
+                "initial_email_body": body_m,
+            })
             continue
 
         console.print(f"  Sending to: {prospect.podcast_name} → {prospect.booking_contact_email}")
@@ -411,6 +449,11 @@ def run_monitoring_phase(
         anthropic_client = anthropic.Anthropic()
 
     run_id = db.log_run(db_conn, config.id, "monitor")
+
+    if gmail_service is None:
+        console.print("\n[yellow]Monitor:[/] Gmail unavailable — skipping reply check")
+        db.complete_run(db_conn, run_id, "skipped", 0, 0, error="gmail_service is None")
+        return 0
 
     prospects = db.get_prospects_with_threads(db_conn, config.id)
     if not prospects:
